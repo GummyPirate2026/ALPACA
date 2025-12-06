@@ -1,0 +1,53 @@
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+pydantic==2.5.3
+
+# Alpaca Trading & Market Data
+alpaca-trade-api==3.1.1
+alpaca-py==0.15.0
+websocket-client==1.7.0
+
+# Data & Analysis
+pandas==2.2.0
+numpy==1.26.3
+backtesting==0.3.3
+ta-lib==0.4.28  # Technical analysis library
+
+# Database
+sqlalchemy==2.0.25
+alembic==1.13.1
+psycopg2-binary==2.9.9  # For PostgreSQL (optional)
+
+# Async & HTTP
+aiohttp==3.9.1
+httpx==0.26.0
+python-dateutil==2.8.2
+
+# AI Integration (Ollama)
+requests==2.31.0
+
+# News & Sentiment Analysis
+textblob==0.17.1
+vaderSentiment==3.3.2
+
+# Testing
+pytest==8.0.0
+pytest-asyncio==0.23.4
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Code Quality
+black==24.1.1
+flake8==7.0.0
+mypy==1.8.0
+isort==5.13.2
+
+# Utilities
+python-json-logger==2.0.7
+rich==13.7.0  # Better console output
+
+# Optional: Advanced Features
+# redis==5.0.1  # For caching (optional)
+# celery==5.3.6  # For task queue (optional)

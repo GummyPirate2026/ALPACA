@@ -4,305 +4,570 @@
 
 ### High-Level Architecture
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Web Dashboard                        │
-│              (React/Vue + TradingView Charts)               │
-└────────────────┬────────────────────────────────────────────┘
-                 │ HTTP/SSE
-┌────────────────┴────────────────────────────────────────────┐
-│                    Backend API Server                       │
-│                   (FastAPI/Flask)                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │  REST API    │  │  SSE Stream  │  │  WebSocket   │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘    │
-└────┬────────────────┬─────────────────┬────────────────────┘
-     │                │                 │
-     ▼                ▼                 ▼
-┌─────────┐    ┌──────────┐      ┌──────────────┐
-│Database │    │ib_async  │      │  Ollama AI   │
-│(SQLite/ │    │ (IBKR)   │      │   (Local)    │
-│Postgres)│    └──────────┘      └──────────────┘
-└─────────┘          │
-                     ▼
-              ┌─────────────┐
-              │   TWS/IB    │
-              │  Gateway    │
-              └─────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Web Browser                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Dashboard  │  │ TradingView  │  │  AI Chat     │  │
+│  │   (React)    │  │   Charts     │  │  Interface   │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────┬───────────────────────────────────────────┘
+              │ HTTP/SSE/WebSocket
+┌─────────────▼───────────────────────────────────────────┐
+│              FastAPI Backend (Python)                    │
+│  ┌────────────┐  ┌────────────┐  ┌────────────────────┐│
+│  │    API     │  │  Strategy  │  │   Alpaca Client    ││
+│  │  Endpoints │  │   Engine   │  │   (alpaca-trade-   ││
+│  │            │  │            │  │      api)          ││
+│  └────────────┘  └────────────┘  └────────────────────┘│
+│                                                          │
+│  ┌────────────┐  ┌────────────┐  ┌────────────────────┐│
+│  │   Ollama   │  │  Database  │  │   Market Data      ││
+│  │  Client    │  │  Manager   │  │   Manager          ││
+│  └────────────┘  └────────────┘  └────────────────────┘│
+└─────────────┬───────────────────────────┬───────────────┘
+              │                           │
+    ┌─────────▼──────────┐    ┌──────────▼────────────┐
+    │  Ollama (Local)    │    │  Alpaca API           │
+    │  Llama 3.1 70B     │    │  - Trading API        │
+    │  http://localhost  │    │  - Market Data API    │
+    │      :11434        │    │  - News API           │
+    └────────────────────┘    │  - WebSocket Streams  │
+                              └───────────────────────┘
 ```
 
-### Component Architecture
+### Component Relationships
 
-**1. Data Layer**
-- Historical data storage (OHLCV, ticks)
-- Strategy parameters and configurations
-- Trade history and performance metrics
-- User settings and watchlists
+#### 1. **Alpaca Integration Layer**
+```
+AlpacaClient
+    ├── TradingAPI (REST)
+    │   ├── get_account()
+    │   ├── submit_order()
+    │   ├── list_positions()
+    │   └── cancel_order()
+    │
+    ├── MarketDataAPI (REST)
+    │   ├── get_bars()
+    │   ├── get_latest_quote()
+    │   ├── get_snapshot()
+    │   └── get_news()
+    │
+    └── StreamingAPI (WebSocket)
+        ├── subscribe_trades()
+        ├── subscribe_quotes()
+        ├── subscribe_bars()
+        └── subscribe_news()
+```
 
-**2. Market Data Service**
-- Real-time quote subscription management
-- Market scanner logic
-- Data normalization and validation
-- Caching layer for frequently accessed data
+#### 2. **Strategy Engine**
+```
+StrategyEngine
+    ├── Strategy Base Class
+    ├── Backtesting Framework
+    ├── Signal Generator
+    ├── Risk Manager
+    └── Order Manager
+        └── Uses AlpacaClient for execution
+```
 
-**3. Strategy Engine**
-- Strategy class framework
-- Backtesting engine (backtesting.py)
-- Signal generation
-- Position management
-- Risk calculations
-
-**4. Broker Interface**
-- IBKR API wrapper (ib_async)
-- Order management system (OMS)
-- Position tracking
-- Account information
-
-**5. AI Service**
-- Ollama API integration
-- Chart analysis
-- News sentiment processing
-- Market research automation
-
-**6. Web Application**
-- Frontend SPA (Single Page Application)
-- Real-time data visualization
-- User authentication (future)
-- Strategy configuration UI
+#### 3. **Data Pipeline**
+```
+Alpaca WebSocket → StreamHandler → Database
+                        ↓
+                   Strategy Engine
+                        ↓
+                   Order Manager
+                        ↓
+                   Alpaca Trading API
+```
 
 ## Key Technical Decisions
 
-### 1. **Broker API: ib_async vs TWS API**
-**Decision**: Use ib_async library
+### 1. **Alpaca as Primary Broker**
+**Decision**: Use Alpaca Trading API instead of Interactive Brokers
 **Rationale**:
-- Pythonic async/await interface
-- Better error handling
-- Active maintenance
-- Proven by Part Time Larry
-- Cleaner code than raw TWS API
+- Simpler REST-based API (vs TWS/Gateway complexity)
+- Instant paper trading access (no account approval)
+- Commission-free trading
+- Official Python SDK (alpaca-trade-api)
+- Built-in WebSocket streaming
+- News API with sentiment
+- Better for learning
 
-### 2. **Backend Framework: FastAPI vs Flask**
-**Decision**: FastAPI (recommended)
+**Implementation**:
+```python
+from alpaca_trade_api import REST, Stream
+
+# Initialize clients
+trading_api = REST(
+    key_id=ALPACA_API_KEY,
+    secret_key=ALPACA_SECRET_KEY,
+    base_url='https://paper-api.alpaca.markets'
+)
+
+stream = Stream(
+    key_id=ALPACA_API_KEY,
+    secret_key=ALPACA_SECRET_KEY,
+    base_url='https://paper-api.alpaca.markets'
+)
+```
+
+### 2. **WebSocket for Real-Time Data**
+**Decision**: Use Alpaca WebSocket API for streaming data
 **Rationale**:
-- Native async support for real-time data
+- Built into Alpaca API
+- Lower latency than polling
+- Real-time trade, quote, and bar updates
+- Handles reconnection automatically
+
+**Implementation Pattern**:
+```python
+@stream.on_trade
+async def on_trade(trade):
+    # Process trade data
+    await process_trade(trade)
+
+@stream.on_quote  
+async def on_quote(quote):
+    # Process quote data
+    await process_quote(quote)
+
+# Subscribe to symbols
+stream.subscribe_trades(['AAPL', 'TSLA', 'SPY'])
+stream.subscribe_quotes(['AAPL', 'TSLA', 'SPY'])
+
+# Run stream
+stream.run()
+```
+
+### 3. **Bracket Orders for Risk Management**
+**Decision**: Use Alpaca bracket orders for automated exits
+**Rationale**:
+- Profit target and stop loss in one order
+- Server-side execution (no connection needed)
+- Reduces emotional decision making
+- Simplifies risk management code
+
+**Implementation**:
+```python
+api.submit_order(
+    symbol='AAPL',
+    qty=100,
+    side='buy',
+    type='market',
+    time_in_force='day',
+    order_class='bracket',
+    take_profit=dict(limit_price=150.00),
+    stop_loss=dict(stop_price=140.00)
+)
+```
+
+### 4. **Paper Trading First**
+**Decision**: All development and testing on paper trading
+**Rationale**:
+- Zero financial risk
+- Unlimited paper trading with Alpaca
+- Test strategies thoroughly
+- Same API as live trading
+
+**Configuration**:
+```python
+# Paper trading
+base_url = 'https://paper-api.alpaca.markets'
+
+# Live trading (future)
+# base_url = 'https://api.alpaca.markets'
+```
+
+### 5. **FastAPI for Async Performance**
+**Decision**: Use FastAPI instead of Flask
+**Rationale**:
+- Native async/await support
+- Better for WebSocket handling
 - Automatic API documentation
 - Type hints and validation
-- Better performance for streaming
-- Modern Python best practices
+- High performance
 
-**Alternative**: Flask (simpler, well-documented)
-
-### 3. **Database: PostgreSQL vs SQLite**
-**Decision**: Start with SQLite, migrate to PostgreSQL if needed
+### 6. **SQLite for Development**
+**Decision**: Start with SQLite, migrate to PostgreSQL later
 **Rationale**:
-- SQLite: Zero configuration, perfect for development
-- PostgreSQL: Better for production, concurrent access
-- Easy migration path
+- Zero configuration
+- Good enough for development
+- Easy to version control
+- Can migrate later when needed
 
-### 4. **Frontend: React vs Vue**
-**Decision**: React (tentative)
+### 7. **Ollama for Local AI**
+**Decision**: Use Ollama with Llama 3.1 70B locally
 **Rationale**:
-- Larger ecosystem
-- TradingView examples more common
-- Better documentation
-- Team preference should decide
+- Complete privacy
+- No API costs
+- Already installed
+- Sufficient quality
+- Works offline
 
-### 5. **Real-time Communication: SSE vs WebSockets**
-**Decision**: Server-Sent Events (SSE) for market data
-**Rationale**:
-- Simpler than WebSockets
-- Unidirectional (server→client) is sufficient
-- Auto-reconnection built-in
-- Following Part Time Larry's approach
+## Design Patterns
 
-**Use WebSockets for**: Bidirectional features (future)
-
-### 6. **Containerization Strategy**
-**Decision**: Docker Compose for development
-**Rationale**:
-- Already have Docker setup
-- Easy environment replication
-- Isolates services (web, API, database)
-- Simple for collaborator setup
-
-## Design Patterns in Use
-
-### 1. **Repository Pattern** (Data Access)
+### 1. **Repository Pattern (Data Access)**
 ```python
-class TradeRepository:
-    """Abstracts database operations"""
-    def get_trades_by_strategy(self, strategy_id)
-    def save_trade(self, trade)
-    def get_performance_metrics(self, date_range)
+class AlpacaRepository:
+    def __init__(self, api_client: REST):
+        self.api = api_client
+    
+    async def get_account(self) -> Account:
+        return self.api.get_account()
+    
+    async def get_positions(self) -> List[Position]:
+        return self.api.list_positions()
+    
+    async def submit_order(self, order: Order) -> OrderResponse:
+        return self.api.submit_order(**order.dict())
 ```
 
-### 2. **Strategy Pattern** (Trading Algorithms)
+### 2. **Strategy Pattern (Trading Strategies)**
 ```python
 class Strategy(ABC):
-    """Base class for all trading strategies"""
     @abstractmethod
-    def generate_signal(self, data) -> Signal
+    def generate_signal(self, data: pd.DataFrame) -> Signal:
+        pass
+
+class ORBStrategy(Strategy):
+    def generate_signal(self, data: pd.DataFrame) -> Signal:
+        # Opening Range Breakout logic
+        or_high = data.iloc[:15]['high'].max()
+        or_low = data.iloc[:15]['low'].min()
+        current_price = data.iloc[-1]['close']
+        
+        if current_price > or_high:
+            return Signal(action='BUY', price=current_price)
+        elif current_price < or_low:
+            return Signal(action='SELL', price=current_price)
+        
+        return Signal(action='HOLD')
+```
+
+### 3. **Observer Pattern (Market Data)**
+```python
+class MarketDataObserver(ABC):
+    @abstractmethod
+    async def on_trade(self, trade: Trade):
+        pass
     
     @abstractmethod
-    def calculate_position_size(self, account, signal) -> int
+    async def on_quote(self, quote: Quote):
+        pass
+
+class StrategyObserver(MarketDataObserver):
+    async def on_trade(self, trade: Trade):
+        signal = self.strategy.generate_signal(trade)
+        if signal.action == 'BUY':
+            await self.order_manager.place_order(signal)
 ```
 
-### 3. **Observer Pattern** (Market Data)
+### 4. **Factory Pattern (Order Creation)**
 ```python
-class MarketDataObserver:
-    """Subscribes to market data updates"""
-    def on_bar_update(self, bar)
-    def on_tick(self, tick)
+class OrderFactory:
+    @staticmethod
+    def create_bracket_order(
+        symbol: str,
+        qty: int,
+        entry_price: float,
+        profit_target: float,
+        stop_loss: float
+    ) -> Dict:
+        return {
+            'symbol': symbol,
+            'qty': qty,
+            'side': 'buy',
+            'type': 'limit',
+            'limit_price': entry_price,
+            'time_in_force': 'day',
+            'order_class': 'bracket',
+            'take_profit': {'limit_price': profit_target},
+            'stop_loss': {'stop_price': stop_loss}
+        }
 ```
 
-### 4. **Factory Pattern** (Strategy Creation)
+### 5. **Singleton Pattern (Alpaca Client)**
 ```python
-class StrategyFactory:
-    """Creates strategy instances based on configuration"""
-    def create_strategy(self, strategy_type, params) -> Strategy
-```
-
-### 5. **Singleton Pattern** (Broker Connection)
-```python
-class BrokerConnection:
-    """Ensures single connection to IBKR API"""
+class AlpacaClient:
     _instance = None
-```
-
-### 6. **Facade Pattern** (API Simplification)
-```python
-class TradingAPI:
-    """Simplified interface to complex subsystems"""
-    def get_market_scan(self) -> List[Stock]
-    def place_order(self, symbol, quantity, order_type)
-    def get_positions() -> List[Position]
-```
-
-## Component Relationships
-
-### Data Flow: Real-Time Quotes
-```
-IBKR TWS/Gateway → ib_async client → Data Service → 
-SSE Stream → Frontend → TradingView Chart
-```
-
-### Data Flow: Strategy Execution
-```
-Market Data → Strategy Engine → Signal Generation →
-Risk Check → Order Management → IBKR API → Execution
-```
-
-### Data Flow: Backtesting
-```
-Historical Data (DB) → backtesting.py → Strategy Logic →
-Performance Metrics → Results UI
-```
-
-### Data Flow: AI Research
-```
-User Query → Backend API → Ollama Service →
-LLM Processing → Formatted Response → Frontend Display
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.api = REST(
+                key_id=ALPACA_API_KEY,
+                secret_key=ALPACA_SECRET_KEY,
+                base_url='https://paper-api.alpaca.markets'
+            )
+        return cls._instance
 ```
 
 ## Critical Implementation Paths
 
-### Path 1: From Market Open to First Trade
-1. System starts, connects to IBKR TWS
-2. Market data subscriptions activated
-3. Scanner identifies setup (e.g., gap up stock)
-4. Strategy receives data, generates signal
-5. Risk management validates trade
-6. Order placed via IBKR API
-7. Execution confirmed
-8. Position tracked in database
+### Path 1: Real-Time Market Data Flow
+```
+1. Alpaca WebSocket connects
+   ↓
+2. Subscribe to symbols
+   ↓
+3. Receive trade/quote updates
+   ↓
+4. Validate and normalize data
+   ↓
+5. Store in database
+   ↓
+6. Notify strategy engine
+   ↓
+7. Update frontend via SSE
+```
 
-### Path 2: Real-Time Chart Update
-1. IBKR sends tick/bar data
-2. ib_async processes and normalizes
-3. Data service caches and broadcasts
-4. SSE pushes to connected clients
-5. Frontend receives update
-6. TradingView chart re-renders
+### Path 2: Order Execution Flow
+```
+1. Strategy generates signal
+   ↓
+2. Risk manager validates
+   ↓
+3. Position sizer calculates qty
+   ↓
+4. Order factory creates bracket order
+   ↓
+5. Submit to Alpaca API
+   ↓
+6. Log order details
+   ↓
+7. Monitor via Alpaca updates
+   ↓
+8. Handle fills/rejections
+```
 
-### Path 3: Backtesting Workflow
-1. User configures strategy and date range
-2. Historical data loaded from database
-3. backtesting.py iterates through bars
-4. Strategy generates signals at each bar
-5. Simulated orders executed with slippage
-6. Performance metrics calculated
-7. Equity curve and statistics displayed
+### Path 3: Backtesting Flow
+```
+1. Load Alpaca historical data
+   ↓
+2. Initialize strategy
+   ↓
+3. Iterate through bars
+   ↓
+4. Generate signals
+   ↓
+5. Simulate execution
+   ↓
+6. Track performance
+   ↓
+7. Calculate metrics
+   ↓
+8. Display results
+```
 
-### Path 4: AI Research Query
-1. User asks: "What's the ORB setup for today?"
-2. Request sent to backend API
-3. System gathers: market scan data, pre-market movers
-4. Data formatted for LLM context
-5. Ollama processes with Llama 3.1 70B
-6. Response formatted with actionable insights
-7. Displayed in chat interface
+### Path 4: AI Research Flow
+```
+1. User asks question
+   ↓
+2. Fetch relevant data (Alpaca API)
+   ↓
+3. Format prompt
+   ↓
+4. Send to Ollama
+   ↓
+5. Process response
+   ↓
+6. Format for display
+   ↓
+7. Show to user
+```
 
-## Error Handling Strategy
+## Error Handling Patterns
 
-### 1. **Connection Failures**
-- Automatic retry with exponential backoff
-- Fallback to cached data when available
-- Clear user notifications
+### 1. **Alpaca API Errors**
+```python
+from alpaca_trade_api.rest import APIError
 
-### 2. **Order Rejections**
-- Log detailed error information
-- Notify user with reason
-- Automatic cancellation of dependent orders
+try:
+    order = api.submit_order(...)
+except APIError as e:
+    if e.status_code == 403:
+        logger.error("Insufficient buying power")
+    elif e.status_code == 422:
+        logger.error("Invalid order parameters")
+    else:
+        logger.error(f"API error: {e}")
+```
 
-### 3. **Data Quality Issues**
-- Validate all market data
-- Flag suspicious values
-- Skip bars with missing data in backtests
+### 2. **WebSocket Reconnection**
+```python
+class AlpacaStreamHandler:
+    async def handle_disconnect(self):
+        attempt = 1
+        while attempt <= MAX_RETRIES:
+            try:
+                await self.reconnect()
+                logger.info("Reconnected successfully")
+                break
+            except Exception as e:
+                wait_time = min(2 ** attempt, 60)
+                logger.warning(f"Reconnect attempt {attempt} failed, "
+                              f"waiting {wait_time}s")
+                await asyncio.sleep(wait_time)
+                attempt += 1
+```
 
-### 4. **System Overload**
-- Rate limiting on API endpoints
-- Queue system for order execution
-- Graceful degradation of non-critical features
+### 3. **Market Hours Handling**
+```python
+def check_market_hours():
+    clock = api.get_clock()
+    
+    if not clock.is_open:
+        next_open = clock.next_open
+        logger.info(f"Market closed, opens at {next_open}")
+        return False
+    
+    return True
+```
 
-## Security Considerations
+## Performance Patterns
+
+### 1. **Async Data Processing**
+```python
+async def process_bars_batch(symbols: List[str]):
+    tasks = [fetch_bars(symbol) for symbol in symbols]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+### 2. **Caching Strategy**
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+def get_symbol_info(symbol: str):
+    return api.get_asset(symbol)
+```
+
+### 3. **Database Connection Pooling**
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+
+engine = create_engine(
+    DATABASE_URL,
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10
+)
+```
+
+## Security Patterns
 
 ### 1. **API Key Management**
-- Store in environment variables
-- Never commit to git (.env in .gitignore)
-- Rotate keys periodically
+```python
+from dotenv import load_dotenv
+import os
 
-### 2. **Broker Authentication**
-- Secure TWS connection
-- Use dedicated paper trading account
-- Limited permissions on API keys
+load_dotenv()
 
-### 3. **Local AI Privacy**
-- All LLM processing local (Ollama)
-- No market data sent to external APIs
-- Strategy logic remains private
+ALPACA_API_KEY = os.getenv('ALPACA_API_KEY')
+ALPACA_SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
 
-### 4. **Data Protection**
-- Encrypt sensitive database fields (future)
-- Secure session management (future)
-- HTTPS for web interface (production)
+# Never log secrets
+logger.info(f"Using API key: {ALPACA_API_KEY[:8]}...")
+```
 
-## Performance Optimization
+### 2. **Input Validation**
+```python
+from pydantic import BaseModel, validator
 
-### 1. **Data Caching**
-- In-memory cache for active quotes
-- Redis for distributed caching (future)
-- Database query optimization
+class OrderRequest(BaseModel):
+    symbol: str
+    qty: int
+    side: str
+    
+    @validator('side')
+    def validate_side(cls, v):
+        if v not in ['buy', 'sell']:
+            raise ValueError('side must be buy or sell')
+        return v
+    
+    @validator('qty')
+    def validate_qty(cls, v):
+        if v <= 0:
+            raise ValueError('qty must be positive')
+        return v
+```
 
-### 2. **Async Operations**
-- Non-blocking market data processing
-- Concurrent strategy execution
-- Parallel backtesting
+## Testing Patterns
 
-### 3. **Database Indexing**
-- Index on timestamp, symbol
-- Optimize queries with EXPLAIN
-- Partition large tables (future)
+### 1. **Alpaca API Mocking**
+```python
+from unittest.mock import Mock, patch
 
-### 4. **Frontend Optimization**
-- Lazy loading of chart data
-- Virtualized lists for large datasets
-- Debounced user inputs
+@patch('alpaca_trade_api.REST')
+def test_order_submission(mock_api):
+    mock_api.submit_order.return_value = Mock(id='order123')
+    
+    result = order_manager.place_order('AAPL', 100, 'buy')
+    
+    assert result.id == 'order123'
+    mock_api.submit_order.assert_called_once()
+```
+
+### 2. **Strategy Backtesting**
+```python
+def test_orb_strategy():
+    # Load test data from Alpaca
+    bars = api.get_bars('AAPL', '1Min', start='2024-01-01')
+    
+    strategy = ORBStrategy(opening_range=15)
+    signals = strategy.backtest(bars)
+    
+    assert len(signals) > 0
+    assert all(s.action in ['BUY', 'SELL', 'HOLD'] for s in signals)
+```
+
+## Alpaca-Specific Best Practices
+
+### 1. **Use Bracket Orders**
+Always include stop loss and profit target:
+```python
+api.submit_order(
+    symbol='AAPL',
+    qty=100,
+    side='buy',
+    type='market',
+    time_in_force='day',
+    order_class='bracket',
+    take_profit={'limit_price': profit_target},
+    stop_loss={'stop_price': stop_loss}
+)
+```
+
+### 2. **Check Buying Power**
+Before placing orders:
+```python
+account = api.get_account()
+if float(account.buying_power) < required_capital:
+    logger.warning("Insufficient buying power")
+    return False
+```
+
+### 3. **Handle Market Hours**
+```python
+clock = api.get_clock()
+if not clock.is_open:
+    logger.info("Market is closed")
+    return
+```
+
+### 4. **Monitor Rate Limits**
+```python
+# Alpaca limits: ~200 requests/minute
+time.sleep(0.3)  # Between API calls if looping
+```
+
+### 5. **Use News API for Sentiment**
+```python
+news = api.get_news(symbol='AAPL', limit=10)
+for article in news:
+    sentiment = article.sentiment  # -1 to +1
+    logger.info(f"{article.headline}: {sentiment}")
+```

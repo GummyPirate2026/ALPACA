@@ -112,15 +112,17 @@ None yet - clean slate.
 
 ## Evolution of Project Decisions
 
-### Decision 1: Inspired by Part Time Larry
+### Decision 1: Inspired by Part Time Larry & Alpaca Focus
 **Date**: 2025-12-06
 **Context**: User wanted to build trading app using frameworks from Part Time Larry
-**Decision**: Adopted his proven tech stack and architectural patterns
+**Decision**: Adopted his proven tech stack with Alpaca API (not IBKR)
 **Rationale**: 
-- 196 videos provide comprehensive learning resource
+- 196 videos provide comprehensive learning resource (20+ on Alpaca)
+- Alpaca simpler to start than IBKR (no TWS install)
+- Commission-free trading
+- Instant paper trading access
+- Better for beginners
 - Proven patterns reduce risk
-- Active community for support
-- Good balance of complexity and functionality
 
 ### Decision 2: Memory Bank + .masterplan.md Approach
 **Date**: 2025-12-06

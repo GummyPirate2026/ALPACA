@@ -1,47 +1,68 @@
-# Algorithmic Trading Platform 📈
+# ALPACA - Algorithmic Trading Platform 📈
 
-> A full-stack, self-hosted algorithmic trading platform with AI-powered research, real-time market data, and automated strategy execution.
+> A full-stack, self-hosted algorithmic trading platform with Alpaca commission-free trading, AI-powered research, real-time market data, and automated strategy execution.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
+[![Alpaca](https://img.shields.io/badge/Broker-Alpaca-gold.svg)](https://alpaca.markets)
 [![Ollama](https://img.shields.io/badge/AI-Ollama-black.svg)](https://ollama.ai)
 
-**Status**: 🚧 In Active Development (Phase 0 - Setup)
+**Status**: 🚧 In Active Development (Phase 0 - Alpaca Integration)
 
 ---
 
 ## 🎯 Vision
 
 Build a production-ready algorithmic trading platform that combines:
-- 📊 **Real-time Market Data** - Live quotes and streaming via Interactive Brokers
+- 📊 **Real-time Market Data** - Alpaca WebSocket streaming & historical data
+- 💰 **Commission-Free Trading** - Alpaca API for stocks and crypto
 - 🤖 **Automated Strategies** - Opening Range Breakout (ORB) and custom algorithms
-- 🧠 **AI-Powered Research** - Local LLM integration with Ollama
-- 📈 **Comprehensive Backtesting** - Validate strategies with historical data
+- 🧠 **AI-Powered Research** - Local LLM (Ollama) + Alpaca News API sentiment
+- 📈 **Comprehensive Backtesting** - Validate strategies with Alpaca historical data
 - 🌐 **Modern Web Interface** - Full-stack dashboard with TradingView charts
 
 **Inspired by**: [Part Time Larry](https://www.youtube.com/@parttimelarry) (@parttimelarry)
 
 ---
 
+## ✨ Why Alpaca?
+
+### Advantages Over Traditional Brokers
+- ✅ **Instant Access** - Sign up and get API keys immediately (no approval wait)
+- ✅ **Commission-Free** - Zero transaction costs for stocks and crypto
+- ✅ **Simple API** - RESTful design, much easier than IBKR TWS
+- ✅ **Paper Trading** - Unlimited free paper trading forever
+- ✅ **WebSocket Streaming** - Built-in real-time data
+- ✅ **News API** - Sentiment analysis included
+- ✅ **Fractional Shares** - Trade any dollar amount
+- ✅ **Crypto Trading** - BTC, ETH, and more on same platform
+- ✅ **Extended Hours** - Trade 4 AM - 8 PM ET
+- ✅ **Modern Documentation** - Clear, beginner-friendly
+
+---
+
 ## ✨ Key Features
 
 ### Current (Phase 0)
-- ✅ Project documentation and architecture
+- ✅ Project documentation and architecture (Alpaca-focused)
 - ✅ Git repository with proper structure
 - ✅ Memory Bank for project continuity
 - ✅ Development roadmap (.masterplan.md)
+- ✅ Alpaca API integration planning
 
 ### Planned (Phases 1-5)
-- 🔄 Interactive Brokers API integration (ib_async)
-- 🔄 Real-time market data streaming (SSE)
-- 🔄 TradingView chart integration
+- 🔄 Alpaca Trading API integration (alpaca-trade-api)
+- 🔄 Real-time market data via Alpaca WebSocket
+- 🔄 TradingView chart integration with Alpaca data
 - 🔄 Market scanner for "stocks in play"
-- 🔄 Strategy backtesting engine
-- 🔄 Opening Range Breakout (ORB) strategy
-- 🔄 AI research assistant (Ollama + Llama 3.1 70B)
+- 🔄 Strategy backtesting with Alpaca historical data
+- 🔄 Opening Range Breakout (ORB) strategy with bracket orders
+- 🔄 AI research assistant (Ollama + Alpaca News API)
 - 🔄 Full-stack web dashboard (React/Vue)
 - 🔄 Portfolio tracking and analytics
+- 🔄 News sentiment analysis
+- 🔄 Crypto trading support
 
 ---
 
@@ -54,17 +75,25 @@ Build a production-ready algorithmic trading platform that combines:
 - macOS/Linux (Windows via WSL)
 - Python 3.10 or higher
 - Node.js 18+
-- Docker Desktop
-- Interactive Brokers account (paper trading)
+- Docker Desktop (optional)
+- Alpaca account (free paper trading - instant signup!)
 - 8GB+ RAM available
 ```
+
+### Get Alpaca API Keys (30 seconds!)
+
+1. Go to https://alpaca.markets
+2. Sign up for free
+3. Get instant access to paper trading
+4. Copy your API keys from dashboard
+5. No account approval needed - start building immediately!
 
 ### Installation
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/trading-app.git
-cd trading-app
+git clone https://github.com/GummyPirate2026/ALPACA.git
+cd ALPACA
 
 # 2. Set up Python environment
 python3 -m venv venv
@@ -75,7 +104,7 @@ pip install -r requirements.txt
 
 # 4. Configure environment
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env with your Alpaca API keys
 
 # 5. Initialize database
 python scripts/init_db.py
@@ -107,7 +136,7 @@ docker-compose down
 ## 📁 Project Structure
 
 ```
-trading-app/
+ALPACA/
 ├── .masterplan.md              # Detailed development roadmap
 ├── memory-bank/                # Project documentation
 │   ├── projectbrief.md        # Project overview and goals
@@ -118,7 +147,7 @@ trading-app/
 │   └── progress.md            # Feature tracking
 ├── src/                        # Backend source code
 │   ├── api/                   # FastAPI endpoints
-│   ├── brokers/               # IBKR integration
+│   ├── alpaca/                # Alpaca API integration
 │   ├── strategies/            # Trading strategies
 │   ├── data/                  # Database models
 │   ├── ai/                    # Ollama integration
@@ -140,7 +169,8 @@ trading-app/
 
 ### Backend
 - **FastAPI** - Modern async web framework
-- **ib_async** - Interactive Brokers API client
+- **alpaca-trade-api** - Official Alpaca Python SDK
+- **alpaca-py** - Next-gen Alpaca SDK (optional)
 - **backtesting.py** - Strategy backtesting
 - **pandas** - Data analysis
 - **SQLAlchemy** - Database ORM
@@ -155,7 +185,8 @@ trading-app/
 ### AI & Data
 - **Ollama** - Local LLM runtime
 - **Llama 3.1 70B** - Language model
-- **IBKR Market Data** - Real-time quotes
+- **Alpaca Market Data API** - Real-time quotes & historical data
+- **Alpaca News API** - News with sentiment scores
 
 ### DevOps
 - **Docker** - Containerization
@@ -169,13 +200,13 @@ trading-app/
 
 | Phase | Description | Duration | Status |
 |-------|-------------|----------|--------|
-| **0** | Project Setup & Infrastructure | 1 week | 🟡 70% |
-| **1** | Foundation & IBKR Integration | 2 weeks | ⚪ 0% |
+| **0** | Project Setup & Alpaca Integration Planning | 1 week | 🟡 95% |
+| **1** | Foundation & Alpaca API Connection | 2 weeks | ⚪ 0% |
 | **2** | Market Data & Visualization | 2 weeks | ⚪ 0% |
 | **3** | Strategy Engine & Backtesting | 3 weeks | ⚪ 0% |
 | **4** | Full-Stack Web Application | 4 weeks | ⚪ 0% |
-| **5** | AI Integration (Ollama) | 2 weeks | ⚪ 0% |
-| **6** | Advanced Features | Ongoing | ⚪ 0% |
+| **5** | AI Integration (Ollama + News API) | 2 weeks | ⚪ 0% |
+| **6** | Advanced Features (Crypto, Alerts) | Ongoing | ⚪ 0% |
 
 **Target**: MVP in 3-4 months
 
@@ -185,31 +216,33 @@ See [.masterplan.md](.masterplan.md) for detailed phase breakdown.
 
 ## 🎓 Learning Resources
 
-### Essential Videos (Part Time Larry)
-1. [Interactive Brokers API with Python and ib_async](https://www.youtube.com/@parttimelarry)
-2. [Full Stack IBKR API - TradingView Integration](https://www.youtube.com/@parttimelarry)
-3. [ORB Strategy in Python with IBKR API](https://www.youtube.com/@parttimelarry)
-4. [Real-Time Market Scanners](https://www.youtube.com/@parttimelarry)
-5. [Backtesting.py Tutorial](https://www.youtube.com/@parttimelarry)
+### Essential Videos (Part Time Larry - Alpaca)
+1. [Paper Trading with the Alpaca API (17:49)](https://www.youtube.com/@parttimelarry)
+2. [Alpaca Market Data API Part 1 - Streaming with Python and Websockets (26:52)](https://www.youtube.com/@parttimelarry)
+3. [TradingView webhooks with Alpaca, Python, and AWS Lambda (40:00)](https://www.youtube.com/@parttimelarry)
+4. [Walk Forward Optimization with VectorBT and Alpaca (36:06)](https://www.youtube.com/@parttimelarry)
+5. [Gap Trading with Alpaca News API & Sentiment Analysis (12:32)](https://www.youtube.com/@parttimelarry)
+6. [Build Your Own Robinhood with React Native and Alpaca (9-part series)](https://www.youtube.com/@parttimelarry)
 
 ### Documentation
-- [ib_async Documentation](https://ib-insync.readthedocs.io/)
+- [Alpaca Trading API Docs](https://alpaca.markets/docs/trading/)
+- [Alpaca Market Data API Docs](https://alpaca.markets/docs/market-data/)
+- [alpaca-trade-api Python SDK](https://github.com/alpacahq/alpaca-trade-api-python)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [backtesting.py Documentation](https://kernc.github.io/backtesting.py/)
-- [Interactive Brokers API Guide](https://interactivebrokers.github.io/)
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! This is a learning project focused on algorithmic trading.
+We welcome contributions! This is a learning project focused on algorithmic trading with Alpaca.
 
 1. Read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
-2. Check [Issues](https://github.com/YOUR_USERNAME/trading-app/issues) for tasks
+2. Check [Issues](https://github.com/GummyPirate2026/ALPACA/issues) for tasks
 3. Fork the repository
-4. Create a feature branch (`git checkout -b feature/amazing-feature`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
+4. Create a feature branch (`git checkout -b feature/alpaca-scanner`)
+5. Commit your changes (`git commit -m 'feat: add alpaca market scanner'`)
+6. Push to the branch (`git push origin feature/alpaca-scanner`)
 7. Open a Pull Request
 
 See [.masterplan.md](.masterplan.md) for the development roadmap.
@@ -227,41 +260,79 @@ See [.masterplan.md](.masterplan.md) for the development roadmap.
 - **projectbrief.md** - Project vision and scope
 - **productContext.md** - User workflows and features
 - **systemPatterns.md** - Architecture and design
-- **techContext.md** - Technology and setup
+- **techContext.md** - Technology and setup (Alpaca-specific)
 - **activeContext.md** - Current development focus
 - **progress.md** - Feature tracking
 
 ---
 
+## 💡 Alpaca-Specific Features
+
+### What Makes This Platform Special
+
+**Commission-Free Trading**
+- Zero cost per trade (stocks & crypto)
+- No hidden fees
+- Enables high-frequency testing
+
+**Bracket Orders**
+- Profit target + stop loss in one order
+- Server-side execution (no connection needed)
+- Automated risk management
+
+**News Sentiment Analysis**
+- Real-time news with -1 to +1 sentiment scores
+- Filter by symbol or market-wide
+- Combine with technical analysis
+
+**Fractional Shares**
+- Trade any dollar amount
+- Better portfolio diversification
+- Precise position sizing
+
+**Crypto Trading**
+- Same API for stocks and crypto
+- BTC, ETH, and more
+- 24/7 trading
+
+**Extended Hours**
+- Trade 4:00 AM - 8:00 PM ET
+- Capture pre-market and after-hours moves
+- More opportunities
+
+---
+
 ## ⚠️ Disclaimer
 
-**IMPORTANT**: This is an educational project for learning algorithmic trading concepts.
+**IMPORTANT**: This is an educational project for learning algorithmic trading with Alpaca.
 
-- 📝 **Paper Trading Only**: Start with paper trading (simulated)
+- 📝 **Paper Trading First**: Start with Alpaca paper trading (simulated)
 - ⚖️ **Not Financial Advice**: No trading recommendations provided
 - 🎓 **Learning Purpose**: Focus is on software engineering and trading concepts
 - 🛡️ **Use at Own Risk**: Trading involves substantial risk of loss
 - 🔒 **Security**: Never commit API keys or credentials to git
+- 💰 **No Real Money Initially**: Test thoroughly in paper trading first
 
 ---
 
 ## 📈 Project Status
 
-**Current Phase**: 0 - Project Setup (70% complete)
+**Current Phase**: 0 - Alpaca Integration Planning (95% complete)
 
 ### Recent Updates
-- ✅ Git repository initialized
-- ✅ Memory Bank documentation complete
-- ✅ .masterplan.md roadmap created
-- ✅ Project structure defined
-- ✅ Technology stack finalized
+- ✅ Pivoted from IBKR to Alpaca
+- ✅ Updated all Memory Bank documentation for Alpaca
+- ✅ Created Alpaca-specific architecture patterns
+- ✅ Updated techContext.md with Alpaca integration patterns
+- ✅ Created requirements.txt with alpaca-trade-api
+- ✅ Configured .env.example for Alpaca API keys
 
 ### Next Steps
-- [ ] Complete README.md and CONTRIBUTING.md
-- [ ] Set up GitHub repository
-- [ ] Create project directories
-- [ ] Install Python dependencies
-- [ ] Begin Phase 1: IBKR integration
+- [ ] Sign up for Alpaca paper trading account
+- [ ] Test basic Alpaca API connection
+- [ ] Create first Alpaca data retrieval script
+- [ ] Set up database schema for Alpaca data
+- [ ] Begin Phase 1: Full Alpaca integration
 
 See [memory-bank/progress.md](memory-bank/progress.md) for detailed status.
 
@@ -269,8 +340,8 @@ See [memory-bank/progress.md](memory-bank/progress.md) for detailed status.
 
 ## 🙏 Acknowledgments
 
-- **[Part Time Larry](https://www.youtube.com/@parttimelarry)** - Inspiration and tutorials
-- **Interactive Brokers** - Market data and execution platform
+- **[Part Time Larry](https://www.youtube.com/@parttimelarry)** - Inspiration and Alpaca tutorials
+- **[Alpaca Markets](https://alpaca.markets)** - Commission-free trading API
 - **Ollama Team** - Local LLM infrastructure
 - **Open Source Community** - Amazing libraries and tools
 
@@ -284,23 +355,40 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
+- **Repository**: [github.com/GummyPirate2026/ALPACA](https://github.com/GummyPirate2026/ALPACA)
+- **Alpaca**: [alpaca.markets](https://alpaca.markets)
 - **YouTube**: [Part Time Larry](https://www.youtube.com/@parttimelarry)
 - **Documentation**: [memory-bank/](memory-bank/)
 - **Roadmap**: [.masterplan.md](.masterplan.md)
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/trading-app/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/trading-app/discussions)
+- **Issues**: [GitHub Issues](https://github.com/GummyPirate2026/ALPACA/issues)
 
 ---
 
 ## 💬 Support
 
 - 📚 Check the [memory-bank/](memory-bank/) documentation
-- 🐛 Report bugs via [Issues](https://github.com/YOUR_USERNAME/trading-app/issues)
-- 💡 Suggest features via [Discussions](https://github.com/YOUR_USERNAME/trading-app/discussions)
+- 🐛 Report bugs via [Issues](https://github.com/GummyPirate2026/ALPACA/issues)
+- 💡 Suggest features via [Discussions](https://github.com/GummyPirate2026/ALPACA/discussions)
 - 📖 Review [.masterplan.md](.masterplan.md) for project plans
+- 🦙 Get Alpaca support at [alpaca.markets/support](https://alpaca.markets/support)
+
+---
+
+## 🚀 Getting Started Checklist
+
+- [ ] Sign up at [alpaca.markets](https://alpaca.markets)
+- [ ] Get paper trading API keys
+- [ ] Clone this repository
+- [ ] Set up Python environment
+- [ ] Install dependencies
+- [ ] Configure .env with Alpaca keys
+- [ ] Test Alpaca connection
+- [ ] Follow Phase 1 in .masterplan.md
 
 ---
 
 **Built with ❤️ for algorithmic traders and developers**
+
+**Powered by Alpaca 🦙**
 
 _Last Updated: 2025-12-06_

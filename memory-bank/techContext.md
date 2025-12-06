@@ -5,7 +5,8 @@
 ### Backend Stack
 - **Python 3.10+** - Primary programming language
 - **FastAPI** - Modern async web framework (alternative: Flask)
-- **ib_async** - Interactive Brokers API client library
+- **alpaca-trade-api** - Official Alpaca Python SDK
+- **alpaca-py** - Next-gen Alpaca SDK (alternative)
 - **backtesting.py** - Python backtesting framework
 - **pandas** - Data manipulation and analysis
 - **numpy** - Numerical computations
@@ -27,6 +28,7 @@
 ### Data & Database
 - **SQLite** - Development database
 - **PostgreSQL** (future) - Production database
+- **TimescaleDB** (optional) - Time-series extension for PostgreSQL
 - **Redis** (optional) - Caching layer
 
 ### DevOps & Tools
@@ -38,10 +40,11 @@
 - **flake8** - Linting tool
 
 ### APIs & Data Sources
-- **Interactive Brokers TWS/Gateway** - Broker API
-- **IBKR Market Data** - Real-time & historical data
-- **Alpha Vantage** (optional) - Alternative market data
-- **Yahoo Finance** (optional) - Free historical data
+- **Alpaca Trading API** - Commission-free broker API
+- **Alpaca Market Data API** - Real-time and historical data
+- **Alpaca News API** - News and sentiment data
+- **TradingView** - Advanced charting
+- **IEX Cloud** (optional) - Alternative data source
 
 ## Development Setup
 
@@ -52,7 +55,7 @@
 - Python 3.10 or higher
 - Node.js 18+ (for frontend)
 - Docker Desktop (already installed)
-- Interactive Brokers account (paper trading)
+- Alpaca account (paper trading - free)
 - 8GB+ RAM available (48GB total)
 ```
 
@@ -60,8 +63,8 @@
 
 #### 1. Clone Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/trading-app.git
-cd trading-app
+git clone https://github.com/GummyPirate2026/ALPACA.git
+cd ALPACA
 ```
 
 #### 2. Python Environment Setup
@@ -74,11 +77,11 @@ source venv/bin/activate  # On macOS/Linux
 pip install -r requirements.txt
 ```
 
-#### 3. IBKR TWS Setup
+#### 3. Alpaca Account Setup
 ```bash
-# Download TWS or IB Gateway from Interactive Brokers
-# Configure for paper trading
-# Enable API connections (port 7497 for TWS, 4002 for Gateway)
+# 1. Sign up at https://alpaca.markets
+# 2. Get your paper trading API keys
+# 3. No account approval needed - instant access!
 ```
 
 #### 4. Environment Configuration
@@ -86,12 +89,10 @@ pip install -r requirements.txt
 # Copy environment template
 cp .env.example .env
 
-# Edit .env with your settings
-# IBKR_HOST=127.0.0.1
-# IBKR_PORT=7497
-# IBKR_CLIENT_ID=1
-# DATABASE_URL=sqlite:///./trading.db
-# OLLAMA_URL=http://localhost:11434
+# Edit .env with your Alpaca API keys
+# ALPACA_API_KEY=your_key_here
+# ALPACA_SECRET_KEY=your_secret_here
+# ALPACA_BASE_URL=https://paper-api.alpaca.markets
 ```
 
 #### 5. Database Initialization
@@ -127,17 +128,20 @@ cd frontend && npm run dev  # Frontend
 ## Technical Constraints
 
 ### Performance Constraints
-- **Market Data Rate**: IBKR has rate limits
-  - Maximum 50 simultaneous market data subscriptions
-  - Maximum 60 API requests per second
+- **Market Data Rate**: Alpaca WebSocket has rate limits
+  - Free tier: 200 messages per minute
+  - Unlimited tier: No limits
 - **Local LLM**: Llama 3.1 70B requires ~40GB RAM when loaded
 - **Database**: SQLite has limited concurrent write capability
 
 ### API Limitations
-- **IBKR Paper Trading**: 
-  - Simulated fills may not match real market
-  - Some order types have different behavior
-  - Market data is delayed by 15 minutes unless subscribed
+- **Alpaca Paper Trading**: 
+  - Simulated fills (may differ from live)
+  - Free real-time data (IEX)
+  - No cost to use indefinitely
+- **Market Data**:
+  - Free tier: IEX data (slight delay)
+  - Paid tier: SIP data (consolidated, real-time)
 - **Ollama**:
   - Local processing only (no cloud backup)
   - Response time depends on model size
@@ -147,6 +151,9 @@ cd frontend && npm run dev  # Frontend
 - **Browser Compatibility**: Modern browsers only (Chrome, Firefox, Safari)
 - **Real-time Updates**: Dependent on stable internet connection
 - **Time Zone**: Market hours are Eastern Time (ET)
+- **Trading Hours**: 
+  - Regular: 9:30 AM - 4:00 PM ET
+  - Extended: 4:00 AM - 9:30 AM, 4:00 PM - 8:00 PM ET
 
 ## Dependencies
 
@@ -157,8 +164,10 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-dotenv==1.0.0
 
-# Interactive Brokers
-ib-insync==0.9.86
+# Alpaca
+alpaca-trade-api==3.1.1
+alpaca-py==0.15.0
+websocket-client==1.7.0
 
 # Data & Analysis
 pandas==2.2.0
@@ -168,6 +177,7 @@ backtesting==0.3.3
 # Database
 sqlalchemy==2.0.25
 alembic==1.13.1
+psycopg2-binary==2.9.9  # For PostgreSQL
 
 # Async & Utilities
 aiohttp==3.9.1
@@ -175,6 +185,10 @@ python-dateutil==2.8.2
 
 # AI Integration
 requests==2.31.0
+
+# News & Sentiment
+textblob==0.17.1
+vaderSentiment==3.3.2
 
 # Testing
 pytest==8.0.0
@@ -194,7 +208,8 @@ mypy==1.8.0
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "axios": "^1.6.5",
-    "react-router-dom": "^6.21.3"
+    "react-router-dom": "^6.21.3",
+    "recharts": "^2.10.3"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
@@ -211,7 +226,7 @@ mypy==1.8.0
 ### Development Workflow
 ```bash
 # 1. Create feature branch
-git checkout -b feature/market-scanner
+git checkout -b feature/alpaca-scanner
 
 # 2. Start development environment
 docker-compose up -d
@@ -230,8 +245,8 @@ black src/ tests/
 
 # 7. Commit changes
 git add .
-git commit -m "Add market scanner feature"
-git push origin feature/market-scanner
+git commit -m "feat: add alpaca market scanner"
+git push origin feature/alpaca-scanner
 ```
 
 ### Testing Commands
@@ -240,7 +255,7 @@ git push origin feature/market-scanner
 pytest
 
 # Run specific test file
-pytest tests/test_strategy.py
+pytest tests/test_alpaca_strategy.py
 
 # Run with coverage
 pytest --cov=src --cov-report=html
@@ -300,24 +315,81 @@ ollama list
 
 ## Integration Patterns
 
-### IBKR Connection Pattern
+### Alpaca Trading API Pattern
 ```python
-from ib_async import IB, Stock
+from alpaca_trade_api import REST
 
 # Initialize connection
-ib = IB()
-ib.connect('127.0.0.1', 7497, clientId=1)
+api = REST(
+    key_id='YOUR_API_KEY',
+    secret_key='YOUR_SECRET_KEY',
+    base_url='https://paper-api.alpaca.markets'
+)
 
-# Request market data
-contract = Stock('AAPL', 'SMART', 'USD')
-ticker = ib.reqMktData(contract)
+# Get account info
+account = api.get_account()
+print(f"Buying power: ${account.buying_power}")
 
-# Event handler
-def on_pending_tickers(tickers):
-    for ticker in tickers:
-        print(f"{ticker.contract.symbol}: {ticker.last}")
+# Place order
+api.submit_order(
+    symbol='AAPL',
+    qty=1,
+    side='buy',
+    type='market',
+    time_in_force='day'
+)
 
-ib.pendingTickersEvent += on_pending_tickers
+# Get positions
+positions = api.list_positions()
+for position in positions:
+    print(f"{position.symbol}: {position.qty} shares")
+```
+
+### Alpaca WebSocket Pattern
+```python
+from alpaca_trade_api.stream import Stream
+
+# Initialize stream
+stream = Stream(
+    key_id='YOUR_API_KEY',
+    secret_key='YOUR_SECRET_KEY',
+    base_url='https://paper-api.alpaca.markets'
+)
+
+# Handle trade updates
+@stream.on_trade
+async def on_trade(data):
+    print(f"Trade: {data.symbol} @ ${data.price}")
+
+# Subscribe to symbols
+stream.subscribe_trades(['AAPL', 'TSLA', 'SPY'])
+
+# Run stream
+stream.run()
+```
+
+### Alpaca Market Data Pattern
+```python
+from alpaca_trade_api.rest import REST
+
+api = REST(key_id='KEY', secret_key='SECRET')
+
+# Get historical bars
+bars = api.get_bars(
+    'AAPL',
+    '1Day',
+    start='2024-01-01',
+    end='2024-12-31'
+).df
+
+# Get latest quote
+quote = api.get_latest_quote('AAPL')
+print(f"Bid: ${quote.bid_price}, Ask: ${quote.ask_price}")
+
+# Get news
+news = api.get_news('AAPL', limit=10)
+for article in news:
+    print(f"{article.headline} (sentiment: {article.sentiment})")
 ```
 
 ### TradingView Integration Pattern
@@ -350,13 +422,13 @@ def ask_ollama(prompt: str, model: str = "llama3.1:70b") -> str:
     return response.json()["response"]
 ```
 
-### SSE Streaming Pattern
+### SSE Streaming Pattern (Backend)
 ```python
 from fastapi.responses import StreamingResponse
 
 async def market_data_stream():
     while True:
-        data = await get_market_data()
+        data = await get_alpaca_data()
         yield f"data: {json.dumps(data)}\n\n"
 
 @app.get("/stream/quotes")
@@ -376,11 +448,15 @@ APP_ENV=development
 DEBUG=true
 LOG_LEVEL=INFO
 
-# Interactive Brokers
-IBKR_HOST=127.0.0.1
-IBKR_PORT=7497
-IBKR_CLIENT_ID=1
-IBKR_ACCOUNT=DU123456
+# Alpaca Trading API
+ALPACA_API_KEY=your_api_key_here
+ALPACA_SECRET_KEY=your_secret_key_here
+ALPACA_BASE_URL=https://paper-api.alpaca.markets
+
+# Alpaca Market Data
+ALPACA_DATA_KEY=your_data_key  # Optional if using trading key
+ALPACA_DATA_SECRET=your_data_secret
+ALPACA_DATA_FEED=iex  # or 'sip' for paid feed
 
 # Database
 DATABASE_URL=sqlite:///./data/trading.db
@@ -415,9 +491,10 @@ logging.basicConfig(
 
 # Use in code
 logger = logging.getLogger(__name__)
-logger.info("Strategy signal generated", extra={
+logger.info("Order placed", extra={
     "symbol": "AAPL",
-    "signal": "BUY"
+    "qty": 10,
+    "side": "buy"
 })
 ```
 
@@ -427,16 +504,17 @@ logger.info("Strategy signal generated", extra={
 - Market data latency
 - Order execution time
 - Memory usage tracking
+- WebSocket connection health
 
 ## Troubleshooting Guide
 
 ### Common Issues
 
-**1. IBKR Connection Failed**
-- Check TWS/Gateway is running
-- Verify port number (7497 or 4002)
-- Enable API in TWS settings
-- Check firewall settings
+**1. Alpaca Connection Failed**
+- Check API keys are correct
+- Verify using paper trading URL: https://paper-api.alpaca.markets
+- Check Alpaca status: https://alpaca.markets/status
+- Ensure API keys have trading permission
 
 **2. Ollama Not Responding**
 - Verify Ollama app is running
@@ -452,3 +530,15 @@ logger.info("Strategy signal generated", extra={
 - Check CORS settings in FastAPI
 - Verify API_URL in .env
 - Check backend is running: `curl http://localhost:8000/health`
+
+**5. WebSocket Disconnects**
+- Check internet connection stability
+- Implement reconnection logic
+- Monitor Alpaca WebSocket status
+- Use exponential backoff for retries
+
+**6. Market Data Not Updating**
+- Verify market is open (9:30 AM - 4:00 PM ET)
+- Check data feed subscription (free vs paid)
+- Ensure symbols are valid
+- Monitor rate limits

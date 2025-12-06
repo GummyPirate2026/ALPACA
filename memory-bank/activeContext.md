@@ -1,84 +1,92 @@
 # Active Context
 
 ## Current Work Focus
-**Phase 0: Project Initialization & Setup**
+**Phase 0: Project Pivot to Alpaca**
 
-Setting up the foundational infrastructure for the algorithmic trading platform. Currently establishing the project structure, documentation, and collaboration framework inspired by Part Time Larry's tutorials.
+Pivoting the algorithmic trading platform from Interactive Brokers to Alpaca. Currently updating all documentation, architecture, and technology stack to leverage Alpaca's commission-free trading API, WebSocket streaming, and News API. The project repository has been successfully created on GitHub as "ALPACA" and documentation is being updated to reflect this strategic change.
 
 ## Recent Changes
-- ✅ Initialized Git repository
+- ✅ Successfully deployed initial project to GitHub (GummyPirate2026/ALPACA)
 - ✅ Created comprehensive Memory Bank documentation structure
-- ✅ Set up .gitignore for Python, trading data, and API keys
-- ✅ Defined system architecture following Part Time Larry's patterns
-- ✅ Documented technology stack and development setup
-- ⏳ Creating .masterplan.md for development roadmap
-- ⏳ Setting up GitHub collaboration files
+- ✅ Initialized Git repository with proper .gitignore
+- ✅ Set up Docker Compose for Open WebUI + Ollama
+- ⏳ **Pivoting from IBKR to Alpaca API** (current focus)
+- ⏳ Updating Memory Bank files for Alpaca integration
+- ⏳ Revising .masterplan.md for Alpaca-specific features
+- ⏳ Updating README.md and CONTRIBUTING.md
 
 ## Next Steps
-- [ ] Create .masterplan.md with detailed phase breakdown
-- [ ] Set up README.md with project overview and setup instructions
-- [ ] Create CONTRIBUTING.md for collaboration guidelines
-- [ ] Create .env.example template
-- [ ] Set up project directory structure (src/, tests/, frontend/, etc.)
-- [ ] Create requirements.txt with initial dependencies
-- [ ] Initialize Python virtual environment
-- [ ] Install Interactive Brokers TWS/Gateway (paper trading)
-- [ ] Test IBKR API connection with simple script
-- [ ] Set up GitHub repository and push initial commit
+- [ ] Complete Memory Bank updates for Alpaca
+- [ ] Revise .masterplan.md with Alpaca-specific phases
+- [ ] Update README.md with Alpaca setup instructions
+- [ ] Create requirements.txt with alpaca-trade-api
+- [ ] Update .env.example with Alpaca API key format
+- [ ] Commit and push all Alpaca changes to GitHub
+- [ ] Sign up for Alpaca paper trading account
+- [ ] Test basic Alpaca API connection
+- [ ] Begin Phase 1: Alpaca API integration
 
 ## Active Decisions and Considerations
 
-### 1. **Backend Framework Choice**
-**Current Lean**: FastAPI
-- Modern async support crucial for real-time data
-- Automatic API documentation
-- Better for SSE streaming
-- Part Time Larry uses it in recent videos
+### 1. **Broker Choice: Alpaca vs IBKR**
+**Decision**: Switched to Alpaca
+**Reasoning**: 
+- Simpler API (REST-based vs TWS/Gateway)
+- Instant paper trading access (no account approval)
+- Commission-free trading
+- Better Python SDK (alpaca-trade-api)
+- More Part Time Larry tutorials (20+ videos)
+- Built-in WebSocket streaming
+- News API for sentiment analysis
+- Easier for beginners
 
-**Decision Point**: Confirm with team after basic prototype
+**Trade-offs Accepted**:
+- No futures, options (yet)
+- No international markets
+- Less advanced order types
+- Higher latency than IBKR (not HFT-suitable)
 
-### 2. **Frontend Framework**
-**Options**: React vs Vue
-- React has more TradingView integration examples
-- Vue might be simpler for quick iterations
-- Should align with team's existing knowledge
+### 2. **Alpaca SDK: alpaca-trade-api vs alpaca-py**
+**Current Plan**: Use alpaca-trade-api initially
+- More mature and stable
+- Better documentation
+- More examples from Part Time Larry
+- Can migrate to alpaca-py later
 
-**Decision Point**: Decide before Phase 4 (Web Interface)
+**Migration Point**: After Phase 3 (if needed)
 
-### 3. **Database Choice**
+### 3. **Market Data: Free (IEX) vs Paid (SIP)**
+**Current Plan**: Start with free IEX data
+- Sufficient for development and backtesting
+- No cost barrier to entry
+- Slight delay acceptable for learning
+
+**Upgrade Point**: Before live trading or if latency critical
+
+### 4. **Database Choice**
 **Current Plan**: SQLite for development
 - Zero configuration
 - Easy to version control (small DB)
-- Can migrate to PostgreSQL later
+- Consider TimescaleDB (PostgreSQL extension) for time-series data
 
 **Migration Point**: When concurrent write issues appear
 
-### 4. **IBKR Account Setup**
-**Required**: Paper trading account
-- Need to apply if not already have one
-- TWS vs IB Gateway (Gateway is headless, better for automation)
-- Must enable API access in account settings
-
-**Decision Point**: Before Phase 1 implementation
-
-### 5. **TradingView Charting Library**
-**Licensing**: TradingView library requires commercial license for production
-- Can use during development
-- Need to evaluate licensing costs before production
-- Alternative: Build custom charting with Plotly/D3.js
-
-**Decision Point**: Before Phase 2 completion
+### 5. **Project Name: ALPACA**
+**Decision**: Perfect match for the broker!
+- Repository already named correctly
+- Clear indication of broker integration
+- Easy to remember and communicate
 
 ## Important Patterns and Preferences
 
-### Code Organization
+### Code Organization (Alpaca-Specific)
 ```
 trading-app/
 ├── src/
 │   ├── api/          # FastAPI endpoints
-│   ├── brokers/      # IBKR integration
+│   ├── alpaca/       # Alpaca API integration
 │   ├── strategies/   # Trading strategies
-│   ├── data/         # Data models and database
+│   ├── data/         # Database models
 │   ├── ai/           # Ollama integration
 │   └── utils/        # Shared utilities
 ├── tests/
@@ -91,129 +99,155 @@ trading-app/
 └── memory-bank/      # Project documentation
 ```
 
-### Git Workflow
+### Alpaca API Patterns
+```python
+# Connection pattern
+from alpaca_trade_api import REST
+
+api = REST(
+    key_id=ALPACA_API_KEY,
+    secret_key=ALPACA_SECRET_KEY,
+    base_url='https://paper-api.alpaca.markets'
+)
+
+# WebSocket streaming pattern
+from alpaca_trade_api.stream import Stream
+
+stream = Stream(key_id=KEY, secret_key=SECRET)
+
+@stream.on_trade
+async def on_trade(data):
+    process_trade(data)
+```
+
+### Git Workflow (Alpaca Branch Strategy)
 - `main` branch: Production-ready code
-- `develop` branch: Active development
-- `feature/*` branches: New features
-- `bugfix/*` branches: Bug fixes
+- `develop` branch: Active Alpaca development
+- `feature/alpaca-*` branches: Alpaca-specific features
+- `feature/*` branches: General features
 - Pull requests required for main branch
-- Descriptive commit messages
+- Descriptive commit messages with Alpaca context
 
 ### Development Practices
-- **Test-Driven Development**: Write tests before implementation
+- **Test with Paper Trading First**: Always use paper API
+- **WebSocket Connection Management**: Handle disconnects gracefully
+- **Rate Limit Awareness**: Monitor Alpaca API rate limits
+- **Market Hours**: Respect trading hours (9:30 AM - 4:00 PM ET)
 - **Type Hints**: Use Python type annotations
-- **Documentation**: Docstrings for all functions
+- **Documentation**: Document Alpaca-specific quirks
 - **Code Review**: All PRs reviewed by collaborator
-- **Incremental Commits**: Small, focused commits
-
-### API Design Principles
-- RESTful endpoints for CRUD operations
-- SSE for real-time market data streams
-- WebSockets for bidirectional features (future)
-- Consistent error responses
-- API versioning (/api/v1/)
 
 ## Learnings and Project Insights
 
-### From Part Time Larry Content
+### From Part Time Larry Alpaca Content
 
-**1. IBKR Integration Best Practices**
-- Use ib_async for cleaner async code
-- Always handle disconnections gracefully
-- Maintain single connection instance
-- Implement proper error handling for order rejections
+**1. Alpaca API Best Practices**
+- Use paper trading URL: `https://paper-api.alpaca.markets`
+- Keep API keys in environment variables
+- Handle WebSocket reconnection automatically
+- Use bracket orders for risk management
+- Monitor account buying power before orders
 
-**2. Real-Time Data Handling**
-- Server-Sent Events simpler than WebSockets for one-way data
-- Browser has built-in SSE reconnection
-- Keep data payloads small for responsiveness
-- Use caching to reduce API calls
+**2. Real-Time Data Handling with Alpaca**
+- WebSocket provides trade, quote, and bar updates
+- Subscribe only to needed symbols (avoid rate limits)
+- IEX data is free but slightly delayed
+- SIP data costs but is real-time and consolidated
+- Handle market closed periods gracefully
 
-**3. TradingView Integration**
-- Custom datafeed implementation required
-- UDF (Universal Data Format) is standard
-- Historical data must support multiple timeframes
-- Real-time updates via JavaScript callbacks
+**3. Alpaca News API Integration**
+- Real-time news with sentiment scores
+- Filter by symbol for targeted news
+- Sentiment: -1 (bearish) to +1 (bullish)
+- Combine with technical analysis for better signals
 
-**4. Strategy Development**
-- Keep strategies simple and testable
-- Separate strategy logic from execution
-- Use backtesting.py for validation
-- Always paper trade before live execution
+**4. Strategy Development with Alpaca**
+- Backtesting works well with Alpaca historical data
+- Paper trading fills are simulated (may differ from live)
+- Use bracket orders (entry + profit target + stop loss)
+- Test during market hours for realistic behavior
+- Monitor slippage in paper vs live
 
-**5. Market Scanners**
-- Pre-market volume and gap analysis crucial
-- Multiple criteria reduce false positives
-- Update frequency: every 1-5 seconds
-- Store scanner results for analysis
+**5. Alpaca Advantages**
+- Instant API access (no waiting for approval)
+- Commission-free (no trading costs)
+- Fractional shares supported
+- Extended hours trading available
+- Crypto trading integrated (BTC, ETH, etc.)
+- News API included
 
 ### Technical Insights
 
-**1. Async Python Patterns**
-- FastAPI's async endpoints for non-blocking operations
-- ib_async handles IBKR connection asynchronously
-- Use asyncio.gather() for parallel operations
-- Beware of blocking operations in async contexts
+**1. Alpaca WebSocket Patterns**
+- Separate connections for trading and data
+- Automatic reconnection with exponential backoff
+- Subscribe/unsubscribe dynamically
+- Handle authentication errors gracefully
 
-**2. Database Design**
-- Normalize data for storage efficiency
-- Denormalize for query performance
-- Index heavily queried fields (timestamp, symbol)
-- Partition large tables by date
+**2. Database Design for Trading**
+- Store raw Alpaca bar data
+- Normalize for multiple timeframes
+- Index on timestamp and symbol
+- Consider partitioning by date
 
-**3. AI Integration Strategy**
-- Local Ollama avoids external API costs
-- Llama 3.1 70B provides good analysis quality
-- Structure prompts for consistent outputs
-- Cache repeated queries to save processing time
+**3. Alpaca + Ollama Integration Strategy**
+- Use Ollama to analyze news sentiment
+- Generate trading ideas from market scans
+- Explain strategy decisions
+- Summarize market conditions
+- No external API costs!
 
-**4. Development Speed vs Quality**
-- MVP first: Get basic functionality working
-- Iterate: Add features based on actual usage
-- Test automation: Saves time in long run
-- Documentation: Write it while building, not after
+**4. Development Speed with Alpaca**
+- Faster setup than IBKR (no TWS install)
+- Better documentation and examples
+- Simpler authentication (just API keys)
+- More beginner-friendly error messages
 
-### Risk Management Considerations
+### Risk Management with Alpaca
 
 **1. Paper Trading First**
-- Never test new strategies with real money
-- Paper trading has limitations (fill guarantees)
-- Track paper vs live performance differences
+- Test all strategies in paper trading
+- Verify order execution logic
+- Monitor for unexpected behavior
+- Track performance metrics
 
-**2. Position Sizing**
-- Start with small sizes
+**2. Bracket Orders**
+- Always include profit target
+- Always include stop loss
+- Let Alpaca handle exit automatically
+- Reduces emotional decision making
+
+**3. Position Sizing**
+- Check account buying power
 - Implement max position limits
 - Account for portfolio heat (total risk exposure)
-
-**3. Error Handling**
-- All order operations must have error handling
-- Log all errors for review
-- Implement circuit breakers for repeated failures
+- Start small, scale up gradually
 
 **4. Data Quality**
 - Validate all incoming market data
-- Handle missing or delayed data gracefully
+- Handle missing or delayed data
 - Store raw data for debugging
+- Monitor WebSocket connection health
 
 ## Current Blockers
-None at the moment. All infrastructure decisions are clear and setup can proceed.
+None at the moment. Alpaca pivot is progressing smoothly. All infrastructure decisions are clear.
 
 ## Team Collaboration Notes
 
 ### Roles (Tentative)
-- **You**: Full-stack development, strategy implementation
-- **Partner**: TBD (based on their strengths)
+- **You**: Full-stack development, Alpaca integration
+- **Partner**: TBD (based on their strengths and interests)
 
 ### Communication
 - Use GitHub Issues for feature requests and bugs
 - Use GitHub Projects board for task tracking
 - Regular sync meetings (frequency TBD)
-- Document decisions in Memory Bank
+- Document Alpaca-specific decisions in Memory Bank
 
 ### Work Distribution Strategy
 - Divide by components (frontend/backend)
 - Or divide by features (complete feature ownership)
-- Pair programming for complex components
+- Pair programming for complex Alpaca integrations
 - Code review for all contributions
 
 ## Project Momentum Tracker
@@ -221,20 +255,47 @@ None at the moment. All infrastructure decisions are clear and setup can proceed
 **Week 1 Goals** (Current):
 - ✅ Project initialization
 - ✅ Documentation structure
-- ⏳ GitHub setup
-- ⏳ Development environment setup
-- ⏳ Basic IBKR connection test
+- ✅ GitHub setup
+- ⏳ Pivot to Alpaca
+- ⏳ Update all documentation
+- ⏳ Create requirements.txt
 
 **Week 2 Goals** (Upcoming):
-- [ ] Complete Phase 1: Foundation
-- [ ] IBKR API integration working
-- [ ] Database schema defined
-- [ ] Basic REST API endpoints
-- [ ] First successful market data retrieval
+- [ ] Sign up for Alpaca paper trading
+- [ ] Test basic Alpaca API connection
+- [ ] Set up Python environment with Alpaca SDK
+- [ ] Create first Alpaca data retrieval script
+- [ ] Set up database schema for Alpaca data
 
 **Month 1 Goals**:
-- [ ] Phases 1-2 complete
-- [ ] Real-time market data streaming
-- [ ] TradingView charts displaying data
-- [ ] Basic market scanner functional
+- [ ] Phases 0-2 complete
+- [ ] Real-time Alpaca data streaming functional
+- [ ] TradingView charts displaying Alpaca data
+- [ ] Basic market scanner operational
 - [ ] First strategy framework created
+- [ ] Paper trades successfully executed
+
+## Alpaca-Specific Notes
+
+### Account Setup
+- Sign up at: https://alpaca.markets
+- Get paper trading API keys instantly
+- No account approval needed
+- Test connection immediately
+
+### Key URLs
+- **Paper Trading API**: https://paper-api.alpaca.markets
+- **Live Trading API**: https://api.alpaca.markets (future)
+- **Documentation**: https://alpaca.markets/docs/
+- **Status Page**: https://alpaca.markets/status
+- **Dashboard**: https://app.alpaca.markets
+
+### Rate Limits
+- Free tier: 200 WebSocket messages/minute
+- REST API: Generally 200 requests/minute
+- Monitor usage to avoid throttling
+
+### Data Feed Options
+- **IEX** (free): Slightly delayed, good for development
+- **SIP** (paid): Real-time consolidated tape
+- Choose based on use case and budget
